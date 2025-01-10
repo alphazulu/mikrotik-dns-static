@@ -13,12 +13,13 @@ import os
 load_dotenv()
 
 # Параметры для подключения из .env
-MIKROTIK_HOST = os.getenv("MIKROTIK_HOST")
-MIKROTIK_USER = os.getenv("MIKROTIK_USER")
-MIKROTIK_PASS = os.getenv("MIKROTIK_PASS")
-FILE_URL = os.getenv("FILE_URL")
-ADDRESS_LIST = os.getenv("ADDRESS_LIST")
-RESOLVER_IP = os.getenv("RESOLVER_IP")
+MIKROTIK_HOST = os.getenv("MIKROTIK_HOST", "192.168.88.1")
+MIKROTIK_USER = os.getenv("MIKROTIK_USER", "admin")
+MIKROTIK_PASS = os.getenv("MIKROTIK_PASS", "admin")
+FILE_URL = os.getenv(
+    "FILE_URL", "https://raw.githubusercontent.com/itdoginfo/allow-domains/main/Russia/inside-raw.lst")
+ADDRESS_LIST = os.getenv("ADDRESS_LIST", "vpn")
+RESOLVER_IP = os.getenv("RESOLVER_IP", "8.8.8.8")
 USE_SSL = os.getenv("USE_SSL", "False").lower() == "true"
 API_PORT = 8729 if USE_SSL else 8728
 LOGIN_METHOD = plain
