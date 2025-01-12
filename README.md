@@ -2,7 +2,9 @@
 
 
 MIKROTIK_HOST=адрес микротика
-MIKROTIK_USER=пользовтель 
+
+MIKROTIK_USER=пользовтель
+
 Должен иметь права write, read, api
 
 MIKROTIK_PASS=пароль
