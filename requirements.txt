@@ -1,2 +1,3 @@
 librouteros
 python-dotenv
+requests
