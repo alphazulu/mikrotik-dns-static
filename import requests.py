@@ -92,14 +92,10 @@ def get_existing_domains():
         # Определяем ключи запроса
         name_key = Key('name')
 
-    # address_key = Key('address')
-
         # Запрашиваем только список имен (доменных записей)
         dns_static_path = connection.path('ip', 'dns', 'static')
         query = dns_static_path.select(name_key)
 
-    # existing_domains = list(dns_static_path.select(name_key, address_key))
-        # existing_domains = list(dns_static_path.select(name_key))
         existing_domains = set(entry.get('name', '')
                                for entry in dns_static_path.select(name_key))
 
@@ -141,35 +137,6 @@ def add_dns_entry_to_mikrotik(domains):
         address_key = Key('address')
 
         added_count = 0
-        skipped_count = 0
-
-    #     for domain in domains:
-    #         existing_entries = list(dns_static_path.select(
-    #             name_key, address_key).where(name_key == domain))
-    #         if not existing_entries:
-    #             dns_static_path.add(
-    #                 name=domain,
-    #                 type='FWD',
-    #                 **{
-    #                     'forward-to': RESOLVER_IP,
-    #                     'match-subdomain': 'yes',
-    #                     'address-list': ADDRESS_LIST
-    #                 }
-    #             )
-    #             added_count += 1
-    #             print(
-    #                 f"Added DNS entry: {domain} resolver {RESOLVER_IP} addr list {ADDRESS_LIST}")
-    #         else:
-    #             skipped_count += 1
-
-    #     print(
-    #         f"Added {added_count} new DNS entries. Skipped {skipped_count} existing entries.")
-    #     connection.close()
-    #     print("API connection closed.")
-    # except (socket.error, TrapError) as e:
-    #     print(f"Connection or API error: {e}")
-    # except Exception as e:
-    #     print(f"Unexpected error: {e}")
 
         for domain in domains:
             if domain not in existing_domains:  # Проверяем, есть ли уже такой домен
