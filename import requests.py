@@ -94,7 +94,6 @@ def get_existing_domains():
 
         # Запрашиваем только список имен (доменных записей)
         dns_static_path = connection.path('ip', 'dns', 'static')
-        query = dns_static_path.select(name_key)
 
         existing_domains = set(entry.get('name', '')
                                for entry in dns_static_path.select(name_key))
