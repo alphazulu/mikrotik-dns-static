@@ -60,17 +60,70 @@ def filter_domains(domains):
         if len(parts) > 2:
             domain = '.'.join(parts[-2:])
 
+        # Если остался только домен верхнего уровня, убираем точку
+        if domain.startswith('.'):
+            domain = domain[1:]
+
         normalized_domains.append(domain)
 
     unique_domains = list(set(normalized_domains))
     print(f"Filtered to {len(unique_domains)} unique second-level domains.")
     return unique_domains
 
+
+# Получаем список уже добавленных доменов в роутере
+
+def get_existing_domains():
+    """Получение списка доменов, уже добавленных в MikroTik, через API."""
+    try:
+        connection_params = {
+            "username": MIKROTIK_USER,
+            "password": MIKROTIK_PASS,
+            "host": MIKROTIK_HOST,
+            "port": API_PORT,
+            "login_method": LOGIN_METHOD,
+        }
+        if USE_SSL:
+            connection_params["ssl_wrapper"] = get_ssl_context()
+
+        connection = connect(**connection_params)
+        print("Connected to MikroTik API successfully.")
+
+        # Определяем ключи запроса
+        name_key = Key('name')
+
+    # address_key = Key('address')
+
+        # Запрашиваем только список имен (доменных записей)
+        dns_static_path = connection.path('ip', 'dns', 'static')
+        query = dns_static_path.select(name_key)
+
+    # existing_domains = list(dns_static_path.select(name_key, address_key))
+        # existing_domains = list(dns_static_path.select(name_key))
+        existing_domains = set(entry.get('name', '')
+                               for entry in dns_static_path.select(name_key))
+
+        connection.close()
+        print(
+            f"Retrieved {len(existing_domains)} existing domains from MikroTik.")
+
+        # Возвращаем множество для быстрого поиска
+        return set(existing_domains)
+
+    except (socket.error, TrapError) as e:
+        print(f"Connection or API error: {e}")
+        return set()
+    except Exception as e:
+        print(f"Unexpected error: {e}")
+        return set()
+
 # Добавление DNS-записей через API MikroTik
 
 
 def add_dns_entry_to_mikrotik(domains):
     try:
+        existing_domains = get_existing_domains()  # Получаем существующие записи
+
         connection_params = {
             "username": MIKROTIK_USER,
             "password": MIKROTIK_PASS,
@@ -90,10 +143,36 @@ def add_dns_entry_to_mikrotik(domains):
         added_count = 0
         skipped_count = 0
 
+    #     for domain in domains:
+    #         existing_entries = list(dns_static_path.select(
+    #             name_key, address_key).where(name_key == domain))
+    #         if not existing_entries:
+    #             dns_static_path.add(
+    #                 name=domain,
+    #                 type='FWD',
+    #                 **{
+    #                     'forward-to': RESOLVER_IP,
+    #                     'match-subdomain': 'yes',
+    #                     'address-list': ADDRESS_LIST
+    #                 }
+    #             )
+    #             added_count += 1
+    #             print(
+    #                 f"Added DNS entry: {domain} resolver {RESOLVER_IP} addr list {ADDRESS_LIST}")
+    #         else:
+    #             skipped_count += 1
+
+    #     print(
+    #         f"Added {added_count} new DNS entries. Skipped {skipped_count} existing entries.")
+    #     connection.close()
+    #     print("API connection closed.")
+    # except (socket.error, TrapError) as e:
+    #     print(f"Connection or API error: {e}")
+    # except Exception as e:
+    #     print(f"Unexpected error: {e}")
+
         for domain in domains:
-            existing_entries = list(dns_static_path.select(
-                name_key, address_key).where(name_key == domain))
-            if not existing_entries:
+            if domain not in existing_domains:  # Проверяем, есть ли уже такой домен
                 dns_static_path.add(
                     name=domain,
                     type='FWD',
@@ -104,19 +183,15 @@ def add_dns_entry_to_mikrotik(domains):
                     }
                 )
                 added_count += 1
-                print(
-                    f"Added DNS entry: {domain} resolver {RESOLVER_IP} addr list {ADDRESS_LIST}")
-            else:
-                skipped_count += 1
+                print(f"Added DNS entry: {domain}")
 
-        print(
-            f"Added {added_count} new DNS entries. Skipped {skipped_count} existing entries.")
         connection.close()
-        print("API connection closed.")
+        print(f"Added {added_count} new DNS entries.")
     except (socket.error, TrapError) as e:
         print(f"Connection or API error: {e}")
     except Exception as e:
         print(f"Unexpected error: {e}")
+
 
 # Основная логика
 
