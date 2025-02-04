@@ -96,7 +96,7 @@ def get_existing_domains():
         dns_static_path = connection.path('ip', 'dns', 'static')
 
         existing_domains = set(entry.get('name', '')
-                               for entry in dns_static_path.select(name_key))
+                               for entry in dns_static_path.select(name_key).where({'address-list': ADDRESS_LIST}))
 
         connection.close()
         print(
